@@ -1,6 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from app.models.task import TaskCreate, Task
-from http import HTTPException
+
 
 app = FastAPI()
 tasks = []
