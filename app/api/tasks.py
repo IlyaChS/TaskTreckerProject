@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app import storage
-from app.schemas.task import TaskCreate, Task
+from app.schemas.task import TaskCreate, Task, TaskUpdate
 
 
 router = APIRouter(
@@ -46,4 +46,17 @@ def delete_task(task_id: int):
         if task.id == task_id:
             storage.tasks.remove(task)
             return {"message": "Task deleted successfully"}
+    raise HTTPException(status_code=404, detail="Task not found")
+
+
+@router.patch("/{task_id}", response_model=Task, status_code=200)
+def patch_task(task_id: int, updated_task: TaskUpdate):
+    for task in storage.tasks:
+        if task.id == task_id:
+            update_data = updated_task.model_dump(exclude_unset=True)
+            if not update_data:
+                raise HTTPException(status_code=400, detail="No fields provided for update")
+            for key, value in update_data.items():
+                setattr(task, key, value)
+            return task
     raise HTTPException(status_code=404, detail="Task not found")
