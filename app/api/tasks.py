@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from app import storage
 from app.schemas.task import TaskCreate, Task, TaskUpdate
 
@@ -9,9 +9,18 @@ router = APIRouter(
 )
 
 
+def get_task_count():
+    return len(storage.tasks)
+
+
 @router.get("/", response_model=list[Task], status_code=200)
 def get_tasks():
     return storage.tasks
+
+
+@router.get("/count", status_code=200)
+def get_tasks_amount(amount: int = Depends(get_task_count)):
+    return {"count": amount}
 
 
 @router.get("/{task_id}", response_model=Task, status_code=200)
@@ -60,3 +69,6 @@ def patch_task(task_id: int, updated_task: TaskUpdate):
                 setattr(task, key, value)
             return task
     raise HTTPException(status_code=404, detail="Task not found")
+
+
+
