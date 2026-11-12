@@ -9,8 +9,10 @@ class TaskCreate(BaseModel):
 
 class Task(TaskCreate):
     id: int
+    is_completed: bool = False
 
 
 class TaskUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
+    is_completed: Optional[bool] = None

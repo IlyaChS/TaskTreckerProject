@@ -13,6 +13,19 @@ def get_task_count():
     return len(storage.tasks)
 
 
+def get_task_id(task_id: int):
+    for task in storage.tasks:
+        if task.id == task_id:
+            return task
+    raise HTTPException(status_code=404, detail="Task not found")
+
+
+def check_task_status(task: Task = Depends(get_task_id)):
+    if task.is_completed:
+        raise HTTPException(status_code=400, detail="Task is already completed")
+    return task
+
+
 @router.get("/", response_model=list[Task], status_code=200)
 def get_tasks():
     return storage.tasks
@@ -24,11 +37,8 @@ def get_tasks_amount(amount: int = Depends(get_task_count)):
 
 
 @router.get("/{task_id}", response_model=Task, status_code=200)
-def get_task(task_id: int):
-    for task in storage.tasks:
-        if task.id == task_id:
-            return task
-    raise HTTPException(status_code=404, detail="Task not found")
+def get_task(task: Task = Depends(get_task_id)):
+    return task
 
 
 @router.post("/", response_model=Task, status_code=201)
@@ -40,35 +50,28 @@ def create_task(task: TaskCreate):
 
 
 @router.put("/{task_id}", response_model=Task, status_code=200)
-def update_task(task_id: int, updated_task: TaskCreate):
-    for task in storage.tasks:
-        if task.id == task_id:
-            task.title = updated_task.title
-            task.description = updated_task.description
-            return task
-    raise HTTPException(status_code=404, detail="Task not found")
+def update_task(updated_task: TaskCreate, task: Task = Depends(check_task_status)):
+    task.title = updated_task.title
+    task.description = updated_task.description
+    return task
 
 
 @router.delete("/{task_id}", status_code=200)
-def delete_task(task_id: int):
-    for task in storage.tasks:
-        if task.id == task_id:
-            storage.tasks.remove(task)
-            return {"message": "Task deleted successfully"}
-    raise HTTPException(status_code=404, detail="Task not found")
+def delete_task(task: Task = Depends(get_task_id)):
+    if not task.is_completed:
+        raise HTTPException(status_code=400, detail="Cannot delete an incomplete task")
+    storage.tasks.remove(task)
+    return {"message": "Task deleted successfully"}
 
 
 @router.patch("/{task_id}", response_model=Task, status_code=200)
-def patch_task(task_id: int, updated_task: TaskUpdate):
-    for task in storage.tasks:
-        if task.id == task_id:
-            update_data = updated_task.model_dump(exclude_unset=True)
-            if not update_data:
-                raise HTTPException(status_code=400, detail="No fields provided for update")
-            for key, value in update_data.items():
-                setattr(task, key, value)
-            return task
-    raise HTTPException(status_code=404, detail="Task not found")
+def patch_task(updated_task: TaskUpdate, task: Task = Depends(check_task_status)):
+        update_data = updated_task.model_dump(exclude_unset=True)
+        if not update_data:
+            raise HTTPException(status_code=400, detail="No fields provided for update")
+        for key, value in update_data.items():
+            setattr(task, key, value)
+        return task
 
 
 
