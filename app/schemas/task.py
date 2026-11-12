@@ -1,10 +1,10 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 
 
 class TaskCreate(BaseModel):
-    title: str
-    description: str
+    title: str = Field(min_length=3, max_length=200)
+    description: str = Field(min_length=5, max_length=1000)
 
 
 class Task(TaskCreate):
@@ -15,6 +15,6 @@ class Task(TaskCreate):
 
 
 class TaskUpdate(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    is_completed: Optional[bool] = None
+    title: Optional[str] = Field(min_length=3, max_length=200, default=None)
+    description: Optional[str] = Field(min_length=5, max_length=1000, default=None)
+    is_completed: Optional[bool] = Field(default=None)
