@@ -29,16 +29,3 @@ async def sqlalchemy_exception_handler(
         content={"detail": "Database error"}
     )
 
-
-@app.get("/")
-def root():
-    return {"message": "Hello, World!"}
-
-
-@app.get("/about")
-def read_about():
-    return {
-            "project": "Task Manager",
-            "description": "My first FastAPI project"
-            }
-
