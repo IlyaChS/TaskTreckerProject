@@ -1,30 +1,31 @@
-from fastapi import FastAPI
-from app.models.task import TaskCreate, Task
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
+from app.api.tasks import router as tasks_router
+from app.database.db import Base, engine
+from app.models.task import Task
+from app.logging_config import logger
+
 
 app = FastAPI()
-tasks = []
-id_counter = 1
+app.include_router(tasks_router)
+Base.metadata.create_all(bind=engine)
 
-@app.get("/")
-def root():
-    return {"message": "Hello, World!"}
+logger.info("Application has started.")
 
-@app.get("/about")
-def read_about():
-    return {
-            "project": "Task Manager",
-            "description": "My first FastAPI project"
-            }
 
-@app.get("/tasks")
-def get_tasks():
-    return tasks
+@app.exception_handler(SQLAlchemyError)
+async def sqlalchemy_exception_handler(
+    request: Request,
+    exc: SQLAlchemyError
+):
+    logger.error(
+        "Database error: %s",
+        exc,
+        exc_info=True
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Database error"}
+    )
 
-@app.post("/tasks")
-def create_task(task: TaskCreate):
-    global id_counter
-    new_task = Task(id=id_counter, title=task.title, description=task.description)
-    tasks.append(new_task)
-    id_counter += 1
-    return new_task
-    
