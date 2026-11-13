@@ -12,19 +12,6 @@ router = APIRouter(
 )
 
 
-def get_task_id(task_id: int):
-    for task in storage.tasks:
-        if task.id == task_id:
-            return task
-    raise HTTPException(status_code=404, detail="Task not found")
-
-
-def check_task_status(task: Task = Depends(get_task_id)):
-    if task.is_completed:
-        raise HTTPException(status_code=400, detail="Task is already completed")
-    return task
-
-
 @router.get("/", response_model=list[Task], status_code=200)
 def get_tasks(db: Session = Depends(get_db)):
     return task_repo.get_all_tasks(db)
